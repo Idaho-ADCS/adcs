@@ -1,1 +1,4 @@
 build/
+satellite-esp32/
+satellite-samd21/
+satellite/
