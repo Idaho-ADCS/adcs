@@ -34,6 +34,10 @@ enum Command : uint8_t
 	CMD_TST_SIMPLE_DETUMBLE = 0xa4, // test simplistic detumble
 	CMD_TST_SIMPLE_ORIENT = 0xa5,	// test simplistic orientation
 	CMD_TST_PHOTODIODES = 0xa6,	// test photodiodes
+	CMD_TST_BLDC = 0xa7,	// test functionality of BLDC
+	CMD_TST_MTX = 0xa8,	// test functionality of magnetorquers
+
+
 
 	CMD_ORIENT_DEFAULT = 0x80, // should be orienting to something like X+
 	CMD_ORIENT_X_POS = 0xe0,
