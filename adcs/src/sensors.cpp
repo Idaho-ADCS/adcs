@@ -184,6 +184,61 @@ PDdata readPD(void)
 	return data;
 }
 
+
+/**
+ * @brief      filtering scheme for Photodiodes. Takes the average of the last NUM_SAMPLES readings and returns that as 1 reading.  
+ * 			   We don't need to do frequency domain analysis, so this is an acceptable smoothing filter. 
+ *
+ * @return     The analog values as integers. Planned as 12Bit reading min 0 max 4096. Data saved as 16bit int
+ */
+
+int simple_PD_filter(int channel ){
+
+	const int NUM_SAMPLES = 15; 
+	int readings[NUM_SAMPLES] = {};
+	bool first_reading = true; 
+	int flag =0; 
+	int result =0;;
+	int first = 0; 
+
+	while(first_reading)  // take n samples from the sun sensor and store them in an array 
+	{
+		for(int i = 0; i < NUM_SAMPLES; i++)
+		{
+		readings[i] =  sunSensors.read(channel);
+		first_reading = false;  
+		}
+	}
+
+	for(int i =0; i<NUM_SAMPLES; i++) // take the sum of the readings array 
+	{
+	result  += readings[i];
+	}
+	result = (int)round(float(result)/NUM_SAMPLES);
+	return result; 
+
+}
+
+/**
+ * @brief      Reading Photodiodes through simple filter scheme 
+ *
+ * @return     The analog values as integers. Planned as 12Bit reading min 0 max 4096. Data saved as 16bit int
+ */
+
+PDdata_int read_filtered_PD(void)
+{
+	PDdata_int data;
+	uint8_t channel;
+	
+	for (channel = 0; channel < 6; channel++)  // Sweep through all 6 photodiode channels. Save data to PDdata_int struct. 
+	{
+		data.data[channel] = simple_PD_filter(channel);
+	}
+	return data;
+}
+
+
+
 /* SENSOR RTOS TASKS ======================================================== */
 
 /**

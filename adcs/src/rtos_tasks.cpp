@@ -276,7 +276,7 @@ void heartbeat(void *pvParameters)
 	ADCSdata data_packet;
 	INAdata ina;
 	IMUdata imu;
-	PDdata pd;
+	PDdata_int pd;
 
 	uint8_t *tx_buf;
 
@@ -304,8 +304,8 @@ void heartbeat(void *pvParameters)
 				data_packet.setINAdata(ina);
 			#endif
 
-			pd = readPD();
-
+			pd = read_filtered_PD();
+			data_packet.setPDdata(pd);
 			data_packet.send(); // send to TES
 
 			#if DEBUG

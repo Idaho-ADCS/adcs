@@ -17,6 +17,7 @@
 
 #define NUM_IMUS 1
 #define INA 1
+#define pds 1
 
 // SENSOR VARIABLES DEFINED IN `sensors.cpp` //////////////////////////////////////
 extern INA209 ina209;
@@ -68,6 +69,21 @@ typedef union
 	};
 } PDdata;
 
+typedef union
+{
+	int data[6];
+
+	struct
+	{
+		int x_pos;
+		int x_neg;
+		int y_pos;
+		int y_neg;
+		int z_pos;
+		int z_neg;
+	};
+} PDdata_int;
+
 /* HARDWARE INIT FUNCTIONS ================================================== */
 
 void initIMU(void);
@@ -78,6 +94,8 @@ void initSunSensors(void);
 
 INAdata readINA(void);
 PDdata readPD(void);
+PDdata_int read_filtered_PD(void);
+int simple_PD_filter(int channel);
 
 /* SENSOR RTOS TASKS ======================================================== */
 

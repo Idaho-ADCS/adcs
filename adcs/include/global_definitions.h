@@ -10,7 +10,7 @@
 #define GLOBAL_DEFINITIONS_H
 
 // set to 1 for the ADCS to print to the usb serial connection from SAMD51
-#define DEBUG 0
+#define DEBUG 1
 
 // create more descriptive names for serial interfaces
 #define SERCOM_USB Serial
