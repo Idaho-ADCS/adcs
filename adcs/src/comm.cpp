@@ -138,6 +138,17 @@ void ADCSdata::setIMUdata(IMUdata data)
 	_gyroZ = floatToFixed(data.gyrZ);
 }
 
+void ADCSdata::setPDdata(PDdata_int data)
+{
+	_pd_xpos = data.x_pos;
+	_pd_xneg = data.x_neg;
+	_pd_ypos = data.y_pos;
+	_pd_yneg = data.y_neg;
+	_pd_zpos = data.z_pos;
+	_pd_zneg = data.z_neg;
+
+}
+
 /**
  * @brief      Compute CRC for validation of the packet
  */

@@ -17,7 +17,7 @@
 
 // packet sizes in bytes
 #define COMMAND_LEN 4
-#define PACKET_LEN 14
+#define PACKET_LEN 26
 
 /**
  * @brief      Commands that the ADCS should expect to receive from the satellite
@@ -121,17 +121,24 @@ private:
 		struct
 		{
 			// Data can be accessed as fields - used to build packet
-			uint16_t _status;
-			fixed5_3_t _voltage;
-			int16_t _current;
-			uint8_t _speed;
-			int8_t _magX;
-			int8_t _magY;
-			int8_t _magZ;
-			fixed5_3_t _gyroX;
-			fixed5_3_t _gyroY;
-			fixed5_3_t _gyroZ;
-			uint16_t _crc;
+			uint16_t _status; //2
+			fixed5_3_t _voltage; //1
+			int16_t _current; //2
+			uint8_t _speed; //1
+			int8_t _magX; //1
+			int8_t _magY; //1
+			int8_t _magZ; //1
+			fixed5_3_t _gyroX; //1
+			fixed5_3_t _gyroY; //1
+			fixed5_3_t _gyroZ; //1
+			uint16_t _pd_xpos; //2
+			uint16_t _pd_xneg; //2
+			uint16_t _pd_ypos; //2
+			uint16_t _pd_yneg; //2
+			uint16_t _pd_zpos; //2
+			uint16_t _pd_zneg; //2 
+			uint16_t _crc; //2 
+			//Total = 26 bytes
 		};
 	};
 	
@@ -143,6 +150,7 @@ public:
 	void setINAdata(INAdata data);
 	void setSpeed(float s);
 	void setIMUdata(IMUdata data);
+	void setPDdata(PDdata_int data);
 	uint8_t *getBytes();
 	void clear();
 	void send();
