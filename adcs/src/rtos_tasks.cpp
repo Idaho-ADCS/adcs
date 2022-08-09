@@ -459,6 +459,20 @@ void basic_bldc(void *pvParameters)
 {
 	uint8_t mode;
 
+	//int endTime = 6000;
+	bool firstLoop = true;
+	int t;
+	int firstInflection = 5000;
+	int secondInflection = 25000;
+	int thirdInflection = 15000;
+	int v_0 = 0;
+	int v_f = 50;
+	int d = firstInflection;	//time to acceleration from t0 to firstinflection point, time to deccelerate from ss to zero
+	int duration = 30000;
+
+	double pwm_output = 0;
+	int motor_frequency = 0;
+
 	#if DEBUG
 		char debug_str[16];
 		SERCOM_USB.print("[basic BLDC]\tTask started\r\n");
@@ -466,17 +480,72 @@ void basic_bldc(void *pvParameters)
 
 	while (true)
 	{
-		// #if DEBUG
+		//#if DEBUG
 		// 		SERCOM_USB.print("[basic BLDC]\tChecked mode\r\n");
 		// #endif
 		xQueuePeek(modeQ, &mode, 0);
+        int t0 = millis();
+		int ct = millis();
 
 		if (mode == CMD_TST_BLDC)
 		{
-			// TODO: BLDC test script
+			while(ct - t0 < duration && firstLoop == true){
+				t = millis() - t0;
+				if(ct -t0  < firstInflection){
+					pwm_output = v_0 + (v_f-v_0)*( 10*pow((double(t)/double(d)),3.0) - 15*pow((double(t)/double(d)),4.0) + 6*pow((double(t)/double(d)),5.0));
+					flywhl.run(CW, abs(pwm_output));
+
+				}
+				/*
+				else if(ct-t0 >= firstInflection && ct-t0 < secondInflection){
+					pwm_output = v_f;
+					flywhl.run(CW, abs(pwm_output));
+				}
+				*/
+				else if(ct-t0 >= firstInflection && ct-t0 < thirdInflection){
+					pwm_output = v_f;
+					flywhl.run(CW, abs(pwm_output));
+				}
+
+				else if(ct-t0 >= thirdInflection && ct-t0 < secondInflection){
+					pwm_output = v_f;
+					flywhl.run(CCW, abs(pwm_output));
+				}
+				
+				else if(ct-t0 >= secondInflection && ct-t0 <= duration){
+					int t_thirdStep = t-secondInflection;
+					pwm_output = v_f - (v_0 + (v_f-v_0)*( 10*pow((double(t_thirdStep)/double(d)),3.0) - 15*pow((double(t_thirdStep)/double(d)),4.0) + 6*pow((double(t_thirdStep)/double(d)),5.0)));
+					flywhl.run(CCW, abs(pwm_output));
+				}
+				
+				else{
+					pwm_output = 0.0;
+				}
+
+				//poll motor frequency pin
+				motor_frequency = flywhl.readRPS(false);
+				#if DEBUG
+					//SERCOM_USB.print("[basic BLDC]\tTask running\r\n");
+					SERCOM_USB.print(t);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(pwm_output);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(motor_frequency);
+					SERCOM_USB.print(" \r\n");
+				#endif
+				ct = millis();
+			}
+			//firstLoop = false;
+			//possibly change mode here to go back to standby - 
+			// go bac
+			mode = CMD_HEARTBEAT;
+			state_machine_transition(mode);
 		}
-		vTaskDelay(pdMS_TO_TICKS(1000));
+
 	}
+	//vTaskDelay(pdMS_TO_TICKS(1000));
+	vTaskDelay(pdMS_TO_TICKS(10));
+	
 }
 
 /**
@@ -500,9 +569,24 @@ void basic_mtx(void *pvParameters)
 		// #endif
 		xQueuePeek(modeQ, &mode, 0);
 
+		int t0 = millis();
+		int pwm_output = 128;
+		double motor_frequency = 0;
+		int t = 0;
 		if (mode == CMD_TST_MTX)
 		{
 			// TODO: MTX test script
+			t = millis() - t0;
+			flywhl.run(CW, abs(pwm_output));
+			motor_frequency = flywhl.readRPS(false);
+
+			SERCOM_USB.print(t);
+			SERCOM_USB.print("	");
+			SERCOM_USB.print(pwm_output);
+			SERCOM_USB.print("	");
+			SERCOM_USB.print(motor_frequency);
+			SERCOM_USB.print(" \r\n");
+
 		}
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
