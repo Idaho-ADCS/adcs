@@ -66,7 +66,6 @@ void DRV10970::run(MotorDirection dir, int dc){
     #ifdef TEST_INDEPENDENT
         SERCOM_USB.println("I'm INDEPENDENT!!");
     #endif
-    Serial.println("I'm DEPENDENT!!");
 }
 
 /**
@@ -108,7 +107,15 @@ void DRV10970::stop(){
 
     frequency = (toggles/6.0) / 0.100;    //frequency in Hz
     frequency = frequency * 60;
- }
+
+    //We are assuming here that 1 "toggle" is equal to 1 full rotation of the spindle. If we record for 1s, you can multiply the
+    //value we get by 60; which would give us the revolutions per min (RPM). *IN THEORY*
+    //toggles = toggles*60;
+
+
+    return frequency;  
+}
+
 /**
  * @brief      Check if the motor spindle is rotating (locked)
  *

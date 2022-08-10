@@ -36,6 +36,8 @@ void state_machine_transition(uint8_t mode)
 
 		// WARNING: if you switch out of a test mode the test will still be on the stack
 		// 	on the plus side, the task won't run though
+		case CMD_TST_BLDC:				//ramped acceleration of bldc with diagnostic gyro, fg measurements
+		case CMD_TST_MTX:				//energize magnetorquers to make measurements of B-field perturbations
 		case CMD_TST_BASIC_MOTION: 		// loop flywhl PWM signal 0-100%
 		case CMD_TST_BASIC_AD:
 		case CMD_TST_BASIC_AC:
@@ -99,8 +101,6 @@ void create_test_tasks(void)
 		SERCOM_USB.print("[rtos]\t\tCreated basic motion task\r\n");
 	#endif
 
-	
-	/*
 	// Actuator hardware unit testing
 	xTaskCreate(basic_bldc, "BLDC TEST", 256, NULL, 1, NULL);
 	#if DEBUG
@@ -111,7 +111,6 @@ void create_test_tasks(void)
 	#if DEBUG
 		SERCOM_USB.print("[rtos]\t\tCreated Magnetorquer test task\r\n");
 	#endif
-	*/
 	/*NOT IMPLEMENTED CURRENTLY*/
 	// 	xTaskCreate(basic_attitude_determination, "BASIC AD", 256, NULL, 1, NULL);
 	// #if DEBUG
@@ -456,6 +455,139 @@ void basic_motion(void *pvParameters)
 }
 
 /**
+ * @brief      Experiment to validate the functionality of reaction wheel hardware
+ *
+ * @param      pvParameters  The pv parameters
+ */
+void basic_bldc(void *pvParameters)
+{
+	uint8_t mode;
+
+	int t;
+	int firstInflection = 10000;
+	int secondInflection = 30000;
+	int v_0 = 0;
+	int v_f = 30;
+	int d = firstInflection;	//time to acceleration from t0 to firstinflection point, time to deccelerate from ss to zero
+	int duration = 40000;
+
+	double pwm_output = 0;
+	int motor_frequency = 0;
+
+	#if DEBUG
+		char debug_str[16];
+		SERCOM_USB.print("[basic BLDC]\tTask started\r\n");
+	#endif
+
+	while (true)
+	{
+		//#if DEBUG
+		// 		SERCOM_USB.print("[basic BLDC]\tChecked mode\r\n");
+		// #endif
+		xQueuePeek(modeQ, &mode, 0);
+        int t0 = millis();
+		int ct = millis();
+
+		if (mode == CMD_TST_BLDC)
+		{
+			while(ct - t0 < duration + d){
+				t = millis() - t0;
+				if(ct -t0  < firstInflection){
+					pwm_output = v_0 + (v_f-v_0)*( 10*pow((double(t)/double(d)),3.0) - 15*pow((double(t)/double(d)),4.0) + 6*pow((double(t)/double(d)),5.0));
+					flywhl.run(CW, abs(pwm_output));
+				}
+				
+				else if(ct-t0 >= firstInflection && ct-t0 < secondInflection){
+					pwm_output = v_f;
+					flywhl.run(CW, abs(pwm_output));
+				}
+				
+				else if(ct-t0 >= secondInflection && ct-t0 <= duration){
+					int t_thirdStep = t-secondInflection;
+					pwm_output = v_f - (v_0 + (v_f-v_0)*( 10*pow((double(t_thirdStep)/double(d)),3.0) - 15*pow((double(t_thirdStep)/double(d)),4.0) + 6*pow((double(t_thirdStep)/double(d)),5.0)));
+					flywhl.run(CW, abs(pwm_output));
+				}
+
+				else if(ct - t0 > duration + d){
+					pwm_output = 0.0;
+					flywhl.run(CW, abs(pwm_output));
+				}
+				
+				else{
+					pwm_output = 0.0;
+				}
+
+				//poll motor frequency pin
+				motor_frequency = flywhl.readRPS(false);
+				#if DEBUG
+					//SERCOM_USB.print("[basic BLDC]\tTask running\r\n");
+					SERCOM_USB.print(t);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(pwm_output);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(motor_frequency);
+					SERCOM_USB.print(" \r\n");
+				#endif
+				ct = millis();
+			}
+			//possibly change mode here to go back to standby - 
+			// go bac
+			mode = CMD_HEARTBEAT;
+			state_machine_transition(mode);
+		}
+
+	}
+	//vTaskDelay(pdMS_TO_TICKS(1000));
+	vTaskDelay(pdMS_TO_TICKS(10));
+	
+}
+
+/**
+ * @brief      Experiment to validate the functionality of magnetorquer hardware
+ *
+ * @param      pvParameters  The pv parameters
+ */
+void basic_mtx(void *pvParameters)
+{
+	uint8_t mode;
+
+	#if DEBUG
+		char debug_str[16];
+		SERCOM_USB.print("[basic MTX]\tTask started\r\n");
+	#endif
+
+	while (true)
+	{
+		// #if DEBUG
+		// 		SERCOM_USB.print("[basic MTX]\tChecked mode\r\n");
+		// #endif
+		xQueuePeek(modeQ, &mode, 0);
+
+		int t0 = millis();
+		int pwm_output = 128;
+		double motor_frequency = 0;
+		int t = 0;
+		if (mode == CMD_TST_MTX)
+		{
+			// TODO: MTX test script
+			t = millis() - t0;
+			flywhl.run(CW, abs(pwm_output));
+			motor_frequency = flywhl.readRPS(false);
+
+			SERCOM_USB.print(t);
+			SERCOM_USB.print("	");
+			SERCOM_USB.print(pwm_output);
+			SERCOM_USB.print("	");
+			SERCOM_USB.print(motor_frequency);
+			SERCOM_USB.print(" \r\n");
+
+		}
+		vTaskDelay(pdMS_TO_TICKS(1000));
+	}
+}
+
+
+/**
  * @brief      [NOT IMPLEMENTED] calculate and output result of attitude determination, MODE_TEST_AD
  *
  * @param      pvParameters  The pv parameters
@@ -612,6 +744,7 @@ void simple_detumble(void *pvParameters)
 		vTaskDelay(pdMS_TO_TICKS(10));
 	}
 }
+
 
 /**
  * @brief      test ability to orient the system, MODE_TEST_ORIENT

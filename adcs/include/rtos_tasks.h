@@ -3,7 +3,7 @@
  *
  * @brief      This file implements rtos tasks for various modes of operation.
  *
- * @author     Garrett Wells, Parker Piedmont
+ * @author     Garrett Wells, Parker Piedmont, MMR
  * @date       2022
  */
 #ifndef __RTOS_TASKS_H__
@@ -35,5 +35,8 @@ void basic_attitude_determination(void *pvParameters);
 void basic_attitude_control(void *pvParameters);
 void simple_detumble(void *pvParameters);
 void simple_orient(void *pvParameters);
+
+void basic_mtx(void *pvParameters); //added 07252022; MMR
+void basic_bldc(void *pvParameters);    //added 07252022; MMR
 
 #endif
