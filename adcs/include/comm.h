@@ -59,6 +59,9 @@ enum Status : uint8_t
 
 	STATUS_TEST_START = 0xb0, // starting test
 	STATUS_TEST_END = 0xb1,	  // test finished
+
+
+	
 };
 
 /**
