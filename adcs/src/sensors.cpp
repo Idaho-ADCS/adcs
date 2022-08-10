@@ -205,7 +205,7 @@ int simple_PD_filter(int channel ){
 	{
 		for(int i = 0; i < NUM_SAMPLES; i++)
 		{
-		readings[i] =  sunSensors.read(channel);
+		readings[i] = sunSensors.read(channel);
 		first_reading = false;  
 		}
 	}

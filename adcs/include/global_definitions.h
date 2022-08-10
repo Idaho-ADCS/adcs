@@ -18,4 +18,18 @@
 #define SERCOM_I2C Wire
 #define AD0_VAL 1
 
+//Actuator Pin Definitions 
+#define MTX1_F_PIN 24
+#define MTX1_R_PIN 23
+#define MTX2_F_PIN 22
+#define MTX2_R_PIN 4
+#define MEN_PIN A1
+#define BEN_PIN A5
+#define PWM_PIN 10 
+#define FG_PIN 6
+#define FR_PIN 9
+#define RD_PIN 5
+
+
+
 #endif

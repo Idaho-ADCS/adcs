@@ -137,7 +137,9 @@ void ADCSdata::setIMUdata(IMUdata data)
 	_gyroY = floatToFixed(data.gyrY);
 	_gyroZ = floatToFixed(data.gyrZ);
 }
-
+/**
+ * @brief      Add sunsensor data to packet as an integer 
+ */
 void ADCSdata::setPDdata(PDdata_int data)
 {
 	_pd_xpos = data.x_pos;
@@ -148,6 +150,64 @@ void ADCSdata::setPDdata(PDdata_int data)
 	_pd_zneg = data.z_neg;
 
 }
+/**
+ * @brief      Add frequency pin measurement to the ADCS data packet
+ */
+void ADCSdata::setFreqData(int rps)
+{
+	_freq = rps; 
+}
+
+void ADCSdata::setActStatus()
+{
+
+	uint8_t F1 =0;
+	uint8_t R1 =0;
+	uint8_t F2 =0;
+	uint8_t R2 =0; 
+
+	F1 = digitalRead(MTX1_F_PIN);
+	R1 = digitalRead(MTX1_R_PIN);
+	F2 = digitalRead(MTX2_F_PIN);
+	R2 = digitalRead(MTX2_R_PIN); 
+	
+	// Check the status of MTx1 Pins 
+	if ( F1 &&  R1)
+	{
+		_mtx1 = 0xb; 
+	} else if (!F1 && !R1)
+	{
+		_mtx1 = 0xa;
+	}else if (F1 == 1 && R1 ==0 )
+	{
+		_mtx1 = 0x1;
+	}else if (F1 == 0 && R1 == 1 )
+	{
+		_mtx1 = 0x2;
+	} else {
+		_mtx1 = 0x0;
+	}
+	// Check the Status of the Mtx2 Pins 
+	if ( F2 &&  R2)
+	{
+		_mtx2 = 0xb; 
+	} else if (!F2 && !R2)
+	{
+		_mtx2 = 0xa;
+	}else if (F2 == 1 && R2 ==0 )
+	{
+		_mtx2 = 0x1;
+	}else if (F2 == 0 && R2 == 1 )
+	{
+		_mtx2 = 0x2;
+	} else {
+		_mtx2 = 0x0;
+	}
+	_buck_en = digitalRead(BEN_PIN);
+	_motor_en = digitalRead(MEN_PIN);
+	
+}
+
 
 /**
  * @brief      Compute CRC for validation of the packet

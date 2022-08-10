@@ -83,8 +83,8 @@ void setup()
 	#endif
 
 	initSunSensors();
-
 	initFlyWhl();
+	initMtx();
 
 	pinMode(9, OUTPUT);
 	digitalWrite(9, HIGH); // set the direction pin HIGH??

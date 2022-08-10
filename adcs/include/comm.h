@@ -17,7 +17,7 @@
 
 // packet sizes in bytes
 #define COMMAND_LEN 4
-#define PACKET_LEN 26
+#define PACKET_LEN 30
 
 /**
  * @brief      Commands that the ADCS should expect to receive from the satellite
@@ -27,7 +27,6 @@ enum Command : uint8_t
 	CMD_DESATURATE = 0x00, // bring everything to a stop, maybe turn off?
 	CMD_STANDBY = 0xc0,
 	CMD_HEARTBEAT = 0xa0, // transmit heartbeat signal regularly
-
 	CMD_TST_BASIC_MOTION = 0xa1,	// test how much force needed to rotate
 	CMD_TST_BASIC_AD = 0xa2,		// test attitude determination
 	CMD_TST_BASIC_AC = 0xa3,		// test attitude control
@@ -52,9 +51,10 @@ enum Status : uint8_t
 	STATUS_ADCS_ERROR = 0xf0, // Sent upon runtime error
 	STATUS_COMM_ERROR = 0x99, // Sent upon invalid communication
 	STATUS_FUDGED = 0x00,	  // Data is not real, just test output
-
 	STATUS_TEST_START = 0xb0, // starting test
 	STATUS_TEST_END = 0xb1,	  // test finished
+	STATUS_MOTOR_TEST = 0xb2, // middle of the motor test
+	STATUS_MTX_TEST = 0xb3,   // middle of the Mtx test 
 };
 
 /**
@@ -124,21 +124,29 @@ private:
 			uint16_t _status; //2
 			fixed5_3_t _voltage; //1
 			int16_t _current; //2
-			uint8_t _speed; //1
+			uint8_t _freq; //1
+
+			uint8_t _motor_en; //1 
+			uint8_t _buck_en; //1
+			uint8_t _mtx1; //1  0xb:break, 0xa:standby, 0x1:forward, 0x2:reverse, 0x0 error 
+			uint8_t _mtx2; //1  0xb:break, 0xa:standby, 0x1:forward, 0x2:reverse, 0x0 error 
+
 			int8_t _magX; //1
 			int8_t _magY; //1
 			int8_t _magZ; //1
 			fixed5_3_t _gyroX; //1
 			fixed5_3_t _gyroY; //1
 			fixed5_3_t _gyroZ; //1
+
 			uint16_t _pd_xpos; //2
 			uint16_t _pd_xneg; //2
 			uint16_t _pd_ypos; //2
 			uint16_t _pd_yneg; //2
 			uint16_t _pd_zpos; //2
 			uint16_t _pd_zneg; //2 
+			
 			uint16_t _crc; //2 
-			//Total = 26 bytes
+			//Total = 30 bytes
 		};
 	};
 	
@@ -151,6 +159,8 @@ public:
 	void setSpeed(float s);
 	void setIMUdata(IMUdata data);
 	void setPDdata(PDdata_int data);
+	void setFreqData(int rps); 
+	void setActStatus(); 
 	uint8_t *getBytes();
 	void clear();
 	void send();

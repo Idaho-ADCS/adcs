@@ -2,7 +2,7 @@
 #define ZXMB5210_MAGNETORQUER_H
 
 #include <Arduino.h>
-#include <global.h>
+#include <global_definitions.h>
 
 class ZXMB5210 {
 private:
@@ -17,6 +17,7 @@ public:
 	void rev(void);
 	void standby(void);
 	void stop(void);
+	
 
 };
 

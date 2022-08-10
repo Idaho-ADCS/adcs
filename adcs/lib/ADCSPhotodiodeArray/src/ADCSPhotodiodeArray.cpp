@@ -83,7 +83,7 @@ float ADCSPhotodiodeArray::read(uint8_t channel)
 		break;
 
 	case 5:
-		digitalWrite(_a, LOW);
+		digitalWrite(_a, HIGH);
 		digitalWrite(_b, LOW);
 		digitalWrite(_c, HIGH);
 		break;
@@ -95,7 +95,7 @@ float ADCSPhotodiodeArray::read(uint8_t channel)
 	}
 
 	result = analogRead(_input);
-	converted_result = (float)result * (3.3f / 4096.0f);
+	//converted_result = (float)result * (3.3f / 4096.0f);
 	
-	return converted_result;
+	return result;
 }
