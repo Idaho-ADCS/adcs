@@ -78,21 +78,22 @@ void DRV10970::stop(){
     analogWrite(PWM, LOW);  // pull pwm low
     
 }
-
 /**
  * @brief      Read the number of ticks on the motor frequency pin in 50 milliseconds
  *
  * @param[in]  debug  print debug statements
  *
- * @return     Number of ticks observed in 50 milliseconds
+ * @return     Number of ticks observed in 50 milliseconds -> careful, we are approaching the nyquist limit...
  */
-int DRV10970::readRPM(bool debug=false){
+ int DRV10970::readRPS(bool debug=false){    
+    //note, this function should return a double, to facilitate resolution; ok for the time being
     long int t0 = millis(); // read start time
     long int cT = millis(); // current time
-    int gap = 50;                    // milliseconds to measure for
+    int gap = 100;                    // milliseconds to measure for
     int toggles = 0;                 // set number of electrical toggles
     int prev_state = digitalRead(FG);     // state variable
     int cState;
+    double frequency;
     while(cT - t0 < gap){
         cState = digitalRead(FG); // the current state of the FG pin
 
@@ -105,18 +106,9 @@ int DRV10970::readRPM(bool debug=false){
         cT = millis();
     }
 
-    // TODO: do some math here to figure out the RPM
-    // probably something like
-    // toggles gap
-
-    //We are assuming here that 1 "toggle" is equal to 1 full rotation of the spindle. If we record for 1s, you can multiply the
-    //value we get by 60; which would give us the revolutions per min (RPM). *IN THEORY*
-    //toggles = toggles*60;
-
-
-    return toggles;
-}
-
+    frequency = (toggles/6.0) / 0.100;    //frequency in Hz
+    frequency = frequency * 60;
+ }
 /**
  * @brief      Check if the motor spindle is rotating (locked)
  *
