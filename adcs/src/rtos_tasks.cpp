@@ -551,6 +551,17 @@ void basic_mtx(void *pvParameters)
 {
 	uint8_t mode;
 
+	int duration = 10000;
+	int restPeriod = 5000;
+	int mtxPeriod = 5000;
+	int t1 = mtxPeriod;
+	int t2 = t1 + restPeriod;
+	int t3 = t2 + mtxPeriod;
+	int t4 = t3 + restPeriod;
+	int t5 = t4 + mtxPeriod;
+	int t6 = t5 + restPeriod;
+	int t7 = t6 + mtxPeriod;
+
 	#if DEBUG
 		char debug_str[16];
 		SERCOM_USB.print("[basic MTX]\tTask started\r\n");
@@ -564,23 +575,64 @@ void basic_mtx(void *pvParameters)
 		xQueuePeek(modeQ, &mode, 0);
 
 		int t0 = millis();
-		int pwm_output = 128;
-		double motor_frequency = 0;
-		int t = 0;
+		int ct = millis();
+
 		if (mode == CMD_TST_MTX)
 		{
-			// TODO: MTX test script
-			t = millis() - t0;
-			flywhl.run(CW, abs(pwm_output));
-			motor_frequency = flywhl.readRPS(false);
+			// 1. Measure B field components
 
+			//2. Mtx1 step impulse for n seconds
+				//mesure B-field after ss
+				//turn off Mtx
+
+			//3. Wait n seconds to allow Mtx to return to 
+
+			//Repeat for other Mtx, polarity combinations
+			while(ct-t0 < duration){
+				if(ct - t0 < t1){
+					//turn on mtx1 pos
+				}
+
+				if(ct - t0 >= t1 && ct - t0 < t2 ){
+					//rest
+				}
+
+				if(ct - t0 >= t2 && ct - t0 < t3 ){
+					//turn on mtx1 rev
+				}
+
+				if(ct - t0 >= t3 && ct - t0 < t4 ){
+					//rest
+				}
+
+				if(ct - t0 >= t4 && ct - t0 < t5 ){
+					//turn on mtx2 pos
+				}
+
+				if(ct - t0 >= t5 && ct - t0 < t6 ){
+					//rest
+				}
+
+				if(ct - t0 >= t6 && ct - t0 < t7 ){
+					//turn on mtx2 rev
+				}
+
+				else{
+					Mtx1.standby();
+					Mtx2.standby();
+				}
+			}
+
+			ct = millis();
+
+			/*
 			SERCOM_USB.print(t);
 			SERCOM_USB.print("	");
 			SERCOM_USB.print(pwm_output);
 			SERCOM_USB.print("	");
 			SERCOM_USB.print(motor_frequency);
 			SERCOM_USB.print(" \r\n");
-
+			*/
 		}
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
@@ -791,3 +843,51 @@ void simple_orient(void *pvParameters)
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 }
+
+
+
+
+
+/*####### USEFUL FOR TESTING #############
+
+
+// brief test to run bldc at constant duty cycle, poll frequency pin
+void basic_bldc_const(void *pvParameters)
+{
+	uint8_t mode;
+
+	#if DEBUG
+		char debug_str[16];
+		SERCOM_USB.print("[basic MTX]\tTask started\r\n");
+	#endif
+
+	while (true)
+	{
+		// #if DEBUG
+		// 		SERCOM_USB.print("[basic MTX]\tChecked mode\r\n");
+		// #endif
+		xQueuePeek(modeQ, &mode, 0);
+
+		int t0 = millis();
+		int pwm_output = 128;
+		double motor_frequency = 0;
+		int t = 0;
+		if (mode == CMD_TST_MTX)
+		{
+			// TODO: MTX test script
+			t = millis() - t0;
+			flywhl.run(CW, abs(pwm_output));
+			motor_frequency = flywhl.readRPS(false);
+
+			SERCOM_USB.print(t);
+			SERCOM_USB.print("	");
+			SERCOM_USB.print(pwm_output);
+			SERCOM_USB.print("	");
+			SERCOM_USB.print(motor_frequency);
+			SERCOM_USB.print(" \r\n");
+
+		}
+		vTaskDelay(pdMS_TO_TICKS(1000));
+	}
+}
+*/
