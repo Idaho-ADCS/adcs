@@ -3,7 +3,7 @@
 ICM_20948_I2C IMU1;
 ICM_20948_I2C IMU2;
 
-INA209 ina209;
+INA209 ina209(1000000);
 
 ADCSPhotodiodeArray sunSensors(A0, 13, 12, 11);
 
