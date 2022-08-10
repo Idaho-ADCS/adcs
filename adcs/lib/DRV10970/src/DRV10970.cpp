@@ -85,7 +85,8 @@ void DRV10970::stop(){
  *
  * @return     Number of ticks observed in 50 milliseconds -> careful, we are approaching the nyquist limit...
  */
-int DRV10970::readRPS(bool debug=false){
+ int DRV10970::readRPS(bool debug=false){    
+    //note, this function should return a double, to facilitate resolution; ok for the time being
     long int t0 = millis(); // read start time
     long int cT = millis(); // current time
     int gap = 100;                    // milliseconds to measure for

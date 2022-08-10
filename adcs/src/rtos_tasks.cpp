@@ -459,16 +459,13 @@ void basic_bldc(void *pvParameters)
 {
 	uint8_t mode;
 
-	//int endTime = 6000;
-	bool firstLoop = true;
 	int t;
-	int firstInflection = 5000;
-	int secondInflection = 25000;
-	int thirdInflection = 15000;
+	int firstInflection = 10000;
+	int secondInflection = 30000;
 	int v_0 = 0;
-	int v_f = 50;
+	int v_f = 30;
 	int d = firstInflection;	//time to acceleration from t0 to firstinflection point, time to deccelerate from ss to zero
-	int duration = 30000;
+	int duration = 40000;
 
 	double pwm_output = 0;
 	int motor_frequency = 0;
@@ -489,33 +486,27 @@ void basic_bldc(void *pvParameters)
 
 		if (mode == CMD_TST_BLDC)
 		{
-			while(ct - t0 < duration && firstLoop == true){
+			while(ct - t0 < duration + d){
 				t = millis() - t0;
 				if(ct -t0  < firstInflection){
 					pwm_output = v_0 + (v_f-v_0)*( 10*pow((double(t)/double(d)),3.0) - 15*pow((double(t)/double(d)),4.0) + 6*pow((double(t)/double(d)),5.0));
 					flywhl.run(CW, abs(pwm_output));
-
 				}
-				/*
+				
 				else if(ct-t0 >= firstInflection && ct-t0 < secondInflection){
 					pwm_output = v_f;
 					flywhl.run(CW, abs(pwm_output));
-				}
-				*/
-				else if(ct-t0 >= firstInflection && ct-t0 < thirdInflection){
-					pwm_output = v_f;
-					flywhl.run(CW, abs(pwm_output));
-				}
-
-				else if(ct-t0 >= thirdInflection && ct-t0 < secondInflection){
-					pwm_output = v_f;
-					flywhl.run(CCW, abs(pwm_output));
 				}
 				
 				else if(ct-t0 >= secondInflection && ct-t0 <= duration){
 					int t_thirdStep = t-secondInflection;
 					pwm_output = v_f - (v_0 + (v_f-v_0)*( 10*pow((double(t_thirdStep)/double(d)),3.0) - 15*pow((double(t_thirdStep)/double(d)),4.0) + 6*pow((double(t_thirdStep)/double(d)),5.0)));
-					flywhl.run(CCW, abs(pwm_output));
+					flywhl.run(CW, abs(pwm_output));
+				}
+
+				else if(ct - t0 > duration + d){
+					pwm_output = 0.0;
+					flywhl.run(CW, abs(pwm_output));
 				}
 				
 				else{
@@ -535,7 +526,6 @@ void basic_bldc(void *pvParameters)
 				#endif
 				ct = millis();
 			}
-			//firstLoop = false;
 			//possibly change mode here to go back to standby - 
 			// go bac
 			mode = CMD_HEARTBEAT;
