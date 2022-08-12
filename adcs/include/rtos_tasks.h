@@ -15,6 +15,8 @@
 #include <FreeRTOS_SAMD51.h>
 
 extern DRV10970 flywhl;
+extern ZXMB5210 Mtx1;
+extern ZXMB5210 Mtx2;
 extern ICM_20948_I2C IMU1;
 extern QueueHandle_t modeQ;
 extern QueueHandle_t IMUq;

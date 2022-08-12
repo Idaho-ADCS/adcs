@@ -111,6 +111,7 @@ void create_test_tasks(void)
 	#if DEBUG
 		SERCOM_USB.print("[rtos]\t\tCreated Magnetorquer test task\r\n");
 	#endif
+
 	/*NOT IMPLEMENTED CURRENTLY*/
 	// 	xTaskCreate(basic_attitude_determination, "BASIC AD", 256, NULL, 1, NULL);
 	// #if DEBUG
@@ -289,7 +290,6 @@ void heartbeat(void *pvParameters)
 	INAdata ina;
 	IMUdata imu;
 	PDdata_int pd;
-	uint8_t freq; 
 
 	uint8_t *tx_buf;
 
@@ -318,13 +318,9 @@ void heartbeat(void *pvParameters)
 			#endif
 
 			pd = read_filtered_PD();
-			freq = RPS();
 			data_packet.setPDdata(pd);
-			data_packet.setFreqData(freq);
-			data_packet.setActStatus();
-
-
 			data_packet.send(); // send to TES
+
 			#if DEBUG
 				tx_buf = data_packet.getBytes();
 				sprintf(debug_str, "%d", PACKET_LEN);
@@ -551,22 +547,31 @@ void basic_mtx(void *pvParameters)
 {
 	uint8_t mode;
 
-	int duration = 10000;
+	float Bx;
+	float By;
+	float Bz;
+
+	int mtxState = 0;
+	
 	int restPeriod = 5000;
 	int mtxPeriod = 5000;
-	int t1 = mtxPeriod;
+	int t_00 = restPeriod;
+	int t1 = t_00 + mtxPeriod;
 	int t2 = t1 + restPeriod;
 	int t3 = t2 + mtxPeriod;
 	int t4 = t3 + restPeriod;
 	int t5 = t4 + mtxPeriod;
 	int t6 = t5 + restPeriod;
 	int t7 = t6 + mtxPeriod;
+	int duration = t7 + 3000;
+	
 
 	#if DEBUG
 		char debug_str[16];
 		SERCOM_USB.print("[basic MTX]\tTask started\r\n");
 	#endif
-
+	
+	IMUdata imu;
 	while (true)
 	{
 		// #if DEBUG
@@ -580,6 +585,15 @@ void basic_mtx(void *pvParameters)
 		if (mode == CMD_TST_MTX)
 		{
 			// 1. Measure B field components
+			xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+			//xQueuePeek(IMUq, &imu, 0);
+			
+			//IMUdata bField = readIMU( *pvParameters);
+			//Bx = bField.magX;
+			//By = bField.magY;
+			//Bz = bField.magZ;
+
+
 
 			//2. Mtx1 step impulse for n seconds
 				//mesure B-field after ss
@@ -588,51 +602,114 @@ void basic_mtx(void *pvParameters)
 			//3. Wait n seconds to allow Mtx to return to 
 
 			//Repeat for other Mtx, polarity combinations
+			
 			while(ct-t0 < duration){
-				if(ct - t0 < t1){
+
+				if(ct - t0 < t_00){
+					//rest
+					Mtx1.stop();
+					Mtx2.stop();
+					mtxState = 0;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
+				}
+				
+				if(ct - t0 >= t_00 && ct - t0 < t1 ){
 					//turn on mtx1 pos
+					Mtx1.fwd();
+					mtxState = 1;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
 
 				if(ct - t0 >= t1 && ct - t0 < t2 ){
 					//rest
+					Mtx1.standby();
+					mtxState = 0;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
 
 				if(ct - t0 >= t2 && ct - t0 < t3 ){
 					//turn on mtx1 rev
+					Mtx1.rev();
+					mtxState = -1;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
 
 				if(ct - t0 >= t3 && ct - t0 < t4 ){
 					//rest
+					Mtx1.standby();
+					mtxState = 0;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
 
 				if(ct - t0 >= t4 && ct - t0 < t5 ){
 					//turn on mtx2 pos
+					Mtx2.fwd();
+					mtxState = 1;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
 
 				if(ct - t0 >= t5 && ct - t0 < t6 ){
 					//rest
+					Mtx2.standby();
+					mtxState = 0;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
 
 				if(ct - t0 >= t6 && ct - t0 < t7 ){
 					//turn on mtx2 rev
+					Mtx2.rev();
+					mtxState = -1;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
 
-				else{
-					Mtx1.standby();
-					Mtx2.standby();
+				if(ct-t0 > t7){
+					Mtx1.stop();
+					Mtx2.stop();
+					mtxState = 0;
+
+					xSemaphoreTake(IMUsemphr, portMAX_DELAY);
+					xQueuePeek(IMUq, &imu, 0);
 				}
+
+				Bx = imu.magX;
+				By = imu.magY;
+				Bz = imu.magZ;
+
+				#if DEBUG
+					SERCOM_USB.print(ct - t0);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(mtxState);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(Bx);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(By);
+					SERCOM_USB.print("	");
+					SERCOM_USB.print(Bz);
+					SERCOM_USB.print(" \r\n");
+				#endif
+
+				ct = millis();
 			}
+			mode = CMD_HEARTBEAT;
+			state_machine_transition(mode);
 
-			ct = millis();
-
-			/*
-			SERCOM_USB.print(t);
-			SERCOM_USB.print("	");
-			SERCOM_USB.print(pwm_output);
-			SERCOM_USB.print("	");
-			SERCOM_USB.print(motor_frequency);
-			SERCOM_USB.print(" \r\n");
-			*/
+			
 		}
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}

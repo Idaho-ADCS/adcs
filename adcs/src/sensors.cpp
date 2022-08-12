@@ -198,7 +198,7 @@ int simple_PD_filter(int channel ){
 	int readings[NUM_SAMPLES] = {};
 	bool first_reading = true; 
 	int flag =0; 
-	int result =0;;
+	int result =0;
 	int first = 0; 
 
 	while(first_reading)  // take n samples from the sun sensor and store them in an array 
